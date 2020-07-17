@@ -1,0 +1,11 @@
+; example from RDOS/DOS Assembly Language and Program Utilities, p18
+; this subroutine calculates the absolute value of a number in AC0
+		.TITL	.ABSL
+		.ENT	.ABS
+		.NREL
+
+.ABS:	MOVL# 0,0,SZC	; TEST SIGN
+		NEG 0,0			; NEGATIVE IF NEGATIVE
+		JMP 0,3
+		.END
+

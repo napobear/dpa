@@ -1,0 +1,15 @@
+.titl foo
+.ent start,zig,zag
+start:	1
+.comm comm,10
+	2
+.gadd ga,1
+	3
+.gref gr,2
+	4
+.csiz 20
+	5
+.ento ovrly
+	6
+.extn ex1 ,x2 ,x3
+.end

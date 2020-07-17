@@ -1,0 +1,153 @@
+;
+; COPYRIGHT (C) DATA GENERAL CORPORATION 1977, 1978, 1979, 1984
+; ALL RIGHTS RESERVED.
+; LICENSED MATERIAL-PROPERTY OF DATA GENERAL CORPORATION.
+; THIS SOFTWARE IS MADE AVAILABLE SOLELY PURSUANT TO THE TERMS OF A
+; DGC LICENSE AGREEMENT WHICH GOVERNS ITS USE.
+;
+; DEFINE AS PERMANENT SYMBOLS ALL MONITOR RELATED SYMBOLS
+
+
+; DEFINE THE NOVA SYSTEM CALL
+
+        .DUSR   .SYSTM= JSR     @17
+
+
+; DEFINE THE USER STACK POINTER LOCATION
+
+        .DUSR   USP=    16
+
+
+
+
+; DEFINE THE MONITOR CALLS
+
+
+
+; COMMANDS WHICH DO NOT REQUIRE DEVICE ACTION OR CHANNEL NUMBER
+
+        .DUSR   .CREAT= 0B7             ; CREATE FILE
+        .DUSR   .DELET= 1B7             ; DELETE FILE
+        .DUSR   .RENAM= 2B7             ; RENAME A FILE
+        .DUSR   .MEM=   3B7             ; RETURN MEMORY LIMITS
+        .DUSR   .BREAK= 4B7             ; BREAK
+        .DUSR   .RLSE=  5B7             ; RELEASE A DEVICE
+        .DUSR   .DIR=   6B7             ; CHANGE BASE DIRECTORY
+        .DUSR   .EXEC=  7B7             ; EXECUTE A PROGRAM OVERLAY
+        .DUSR   .INIT=  10B7            ; INIT DISK DEVICE
+        .DUSR   .RTN=   11B7            ; SYSTEM RETURN
+        .DUSR   .RESET= 12B7            ; I/O RESET
+        .DUSR   .ERTN=  15B7            ; ERROR RETURN FROM PROGRAM
+        .DUSR   .CRAND= 16B7            ; CREATE RANDOM
+        .DUSR   .GCHAR= 17B7            ; GET TTY CHAR
+        .DUSR   .PCHAR= 20B7            ; TTY PUT CHAR
+        .DUSR   .DELAY= 21B7            ; WAIT N CYCLES
+        .DUSR   .MEMI=  22B7            ; ALLOCATE MEMORY INCREMENT
+        .DUSR   .CCON=  41B7            ; CREATE CONTIGUOUS
+        .DUSR   .EXFG=  43B7            ; EXECUTE FOREGROUND
+        .DIO    .IOCS=  44B7            ; IOCS SYSTEM CALL
+        .DUSR   .IOCO=  45B7            ; IOCS OPEN
+        .DUSR   .EXBG=  55B7            ; EXEC IN BG
+        .DUSR   .IOCP=  57B7            ; IOCS PRE-OPEN
+;       .DUSR   .XXXX=  60B7            ; RESERVED
+        .DUSR   .MOUNT= 64B7            ; MOUNT FLOPPY
+
+;       COMMANDS WHICH REQUIRE CHANNEL NUMBER
+
+        .DIO    .ROPEN= 23B7    ; OPEN FOR READING
+        .DIO    .MTOPD= 52B7    ; OPEN MAG TAPE FOR DIRECT I/O
+        .DIO    .OVOPN= 24B7    ; OPEN OVERLAYS
+        .DIO    .CHATR= 26B7    ; CHANGE THE FILE ATTRIBUTES
+        .DIO    .GTATR= 27B7    ; GET THE FILE/DEVICE ATTRIBUTES
+        .DIO    .RDB=   13B7    ; READ BLOCK
+        .DIO    .WRB=   14B7    ; WRITE BLOCK
+        .DIO    .APPEND=25B7    ; OPEN FILE FOR APPENDING
+        .DIO    .OPEN=  30B7    ; OPEN FILE
+        .DIO    .CLOSE= 31B7    ; CLOSE FILE
+        .DIO    .RDS=   32B7    ; READ SEQUENTIAL CHARACTERS
+        .DIO    .RDL=   33B7    ; READ SEQUENTIAL LINE
+        .DIO    .RDR=   34B7    ; READ RANDOM
+        .DIO    .WRS=   35B7    ; WRITE SEQUENTIAL CHARACTERS
+        .DIO    .WRL=   36B7    ; WRITE SEQUENTIAL LINE
+        .DIO    .WRR=   37B7    ; WRITE RANDOM
+        .DIO    .OVLOD= 40B7    ; LOAD OVERLAY
+        .DIO    .SCALL= 42B7    ; GENERAL CALL
+        .DIO    .MTDIO= 46B7    ; MAG TAPE DIRECT I/O
+        .DIO    .SPOS=  47B7    ; SET FILE POSITION
+        .DIO    .GPOS=  50B7    ; GET FILE'S CURRENT POSITION
+        .DIO    .EOPEN= 51B7    ; OPEN FOR EXCLUSIVE USE
+        .DIO    .TOPEN= 52B7    ; TRANSPARENT OPEN
+        .DIO    .CHLAT= 53B7    ; CHANGE LINK ACCESS ATTRIBUTES
+        .DIO    .CHSTS= 54B7    ; GET CHANNEL STATUS
+        .DIO    .UPDAT= 56B7    ; UPDATE FILE SIZE INFORMATION
+        .DIO    .EWRB=  61B7    ; EXTENDED MEM WRITE
+        .DIO    .ERDB=  62B7    ; EXTENDED MEM READ
+        .DIO    .POPEN= 63B7    ; PHYSICAL I/O OPEN
+
+
+; THE FOLLOWING CALLS ARE SCALLS
+
+        .DUSR   .GHRZ=  .SCALL 0        ; GET CLOCK FREQ
+        .DUSR   .DUCLK= .SCALL 1        ; DEF USER CLOCK
+        .DUSR   .RUCLK= .SCALL 2        ; REMAOVE USER CLOCK
+        .DUSR   .GTOD=  .SCALL 3        ; GET TOD
+        .DUSR   .STOD=  .SCALL 4        ; SET TOD
+        .DUSR   .SDAY=  .SCALL 5        ; SET DAY
+        .DUSR   .GDAY=  .SCALL 6        ; GET DAY
+        .DUSR   .IDEF=  .SCALL 7        ; DEFINE DEVICE INT
+        .DUSR   .IRMV=  .SCALL 10       ; REMOVE DEV INT
+        .DUSR   .SPKL=  .SCALL 11       ; SPOOL KILL
+        .DUSR   .SPDA=  .SCALL 12       ; SPOOL DISABLE
+        .DUSR   .SPEA=  .SCALL 13       ; SPOOL ENABLE
+        .DUSR   .RSTAT= .SCALL 14       ; STATUS OF RESOLUTION ENTRY
+        .DUSR   .CPART= .SCALL 15       ; CREATE PARTITION
+        .DUSR   .CDIR=  .SCALL 16       ; CREATE SUBDIRECTORY
+        .DUSR   .LINK=  .SCALL 17       ; LINK ENTRY
+        .DUSR   .EQIV=  .SCALL 20       ; CHANGE DIRECTORY SPECIFIER
+        .DUSR   .GDIRS= .SCALL 21       ; GET DIRECTORY SPECIFIER
+        .DUSR   .SYSI=  .SCALL 22       ; SOS COMPATIBLE CALL
+        .DUSR   .WCHAR= .SCALL 23       ; WAIT FOR TTY CHAR
+        .DUSR   .ICMN=  .SCALL 24       ; INIT COMMON
+        .DUSR   .WRCMN= .SCALL 25       ; WRITE TO COMMON
+        .DUSR   .RDCMN= .SCALL 26       ; READ COMMON
+        .DUSR   .ODIS=  .SCALL 27       ; DISABLE INT (CONTL A,C,F)
+        .DUSR   .OEBL=  .SCALL 30       ; ENABLE INT
+        .DUSR   .DEBL=  .SCALL 31       ; ENABLE MAPPED DEV ACCESS
+        .DUSR   .DDIS=  .SCALL 32       ; DISABLE MAPPED DEV ACCESS
+        .DUSR   .RDOPR= .SCALL 33       ; READ OPERATOR
+        .DUSR   .WROPR= .SCALL 34       ; WRITE OPERATOR
+        .DUSR   .STMAP= .SCALL 35       ; DCH MAP REQ FOR USER
+        .DUSR   .GCIN=  .SCALL 36       ; GET CONSOLE INPUT DEV
+        .DUSR   .GCOUT= .SCALL 37       ; GET CONSOLE OUTPUT DEV
+        .DUSR   .STAT=  .SCALL 40       ; GET STATUS OF FILE
+        .DUSR   .ECLR=  .SCALL 41       ; RELEASE A FILE
+        .DUSR   .TCRET= .SCALL 42       ; TRANSPARENT .CREATE
+        .DUSR   .TCRND= .SCALL 43       ; TRANSPARENT .CRAND
+        .DUSR   .TCCON= .SCALL 44       ; TRANSPARENT .CCON
+        .DUSR   .FGND=  .SCALL 45       ; IS THERE A FOREGROUND
+        .DUSR   .GMEM=  .SCALL 46       ; GET MEM PARTITIONS
+        .DUSR   .SMEM=  .SCALL 47       ; SET MEM PARTITIONS
+        .DUSR   .BOOT=  .SCALL 50       ; INVOKE BOOT
+        .DUSR   .MDIR=  .SCALL 51       ; GET MASTER DIR. SPECIFIER
+        .DUSR   .GCHN=  .SCALL 52       ; GET A FREE CHANNEL
+        .DUSR   .ULNK=  .SCALL 53       ; DELETE A LINK ENTRY
+        .DUSR   .WRPR=  .SCALL 54       ; WRITE PROTECT MEMORY
+        .DUSR   .WREBL= .SCALL 55       ; WRITE ENABLE MEMORY
+        .DUSR   .GSYS=  .SCALL 56       ; GET CURRENT OPERATING SYSTEM NAME
+        .DUSR   .OVRP=  .SCALL 57       ; REPLACE AN OVERLAY
+        .DUSR   .ABTC=  .SCALL 60       ; ABORT A TCB CALL
+        .DUSR   .GMCA=  .SCALL 61       ; WHAT MCA AM I
+        .DUSR   .SECI=  .SCALL 62       ; RESCHEDULE EVERY SEC
+        .DUSR   .HSTRU= .SCALL 63       ; RUN HISTOGRAM
+        .DUSR   .HSTST= .SCALL 64       ; STOP HISTOGRAM
+        .DUSR   .RDSW=  .SCALL 65       ; READ SWITCHES
+        .DUSR   .VMEM=  .SCALL 66       ; GET VIRTUAL MEMORY
+        .DUSR   .MAPDF= .SCALL 67       ; VIRTUAL DATA MAP DEF
+        .DUSR   .TUOFF= .SCALL 70       ; TURN TUNING OFF
+        .DUSR   .TUON=  .SCALL 71       ; TURN TUNING ON
+        .DUSR   .INTAD= .SCALL 72       ; DEFINE INT TASK
+        .DUSR   .IOCI=  .SCALL 73       ; IOCS MAGTAPE INIT
+        .DUSR   .CONN=  .SCALL 74       ; CREATE CONTIGUOUS NO INIT
+
+        .EOT
+

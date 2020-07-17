@@ -1,0 +1,15 @@
+// Figure 5-3, Introduction to Programming
+// Coding to Accept One ASCII Character
+*200
+INPUT,	KCC	/CLEAR KEYBOARD FLAG
+	JMS LISN
+	DCA STORE
+	HLT
+LISN,	0
+	KSF	/SKIP ON KEYBOARD FLAG
+	JMP .-1
+	KRB	/READ KEYBOARD BUFFER
+	JMP I LISN
+STORE,	0
+$
+

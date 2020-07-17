@@ -1,0 +1,31 @@
+	; print "Hello, world" on teletype output
+	; using device I/O instructions
+	; DG Nova/RDOS
+
+	.titl hello
+	.nrel
+
+start:	
+dochar:	lda 0,@pmsg	; load ac0 with next word,
+	mov# 0,0,snr	; test ac0; skip if nonzero
+	  jmp done
+	jsr putc	; output first char of word
+	movs 0,0	; swap bytes
+	jsr putc	; output second char of word
+	isz pmsg	; point to next word
+	jmp dochar	; go around again
+
+done:	.systm
+	.rtn
+
+putc:	skpbz tto	; is tty busy?
+	  jmp .-1	; loop until not busy
+	doas 0,tto	; output char in ac0
+	jmp 0,3		; return from subroutine
+
+pmsg:	.+1
+	; note bytes are packed right-to-left by default
+	.txt /Hello, world.<15><12>/ ; that's CR, LF
+	0 ; flag word to end string
+	
+	.end start

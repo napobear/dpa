@@ -1,0 +1,19 @@
+; Load a byte from memory. The routine is called via a JSR.
+; The byte pointer for the requested byte is in AC2. 
+; The requested byte is returned in the right half of AC0.
+; The left half of AC0 is set to 0. 
+; AC1,AC2 and the carry bit are unchanged. AC3 is destroyed.
+lbyt:	sta 3,lret		; save return address
+	lda 3,mask
+	movr 2,2,snc	; turn byte pointer into word address
+					; and skip if request byte is right byte
+	movs 3,3		; swap mask if requested byte is left byte
+	lda 0,0,2		; place word in AC0
+	and 3,0,snc		; mask off unwanted byte
+					; and skip if swap is not needed
+	movs 0,0		; swap requested byte into right half of AC0
+	movl 2,2		; restore byte pointer and carry
+	jmp @lret		; return
+lret:	0				; return location
+mask:	377
+

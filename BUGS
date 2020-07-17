@@ -1,0 +1,7 @@
+- pseudo-instructions are largely unimplemented
+- symbol table dump at end of assembly is not sorted
+- line numbers in listing and/or symbol table dump don't correspond to actual source lines
+- improve source code commentary
+- check all constants and predefined tables for correctness
+- expression operators are a bit skimpy (only add, subtract, negate)
+- MOSTLY FIXED no native DG Nova object file output

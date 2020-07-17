@@ -1,0 +1,25 @@
+	; "Hello, world" message to operator console
+	; DG Nova/RDOS
+	.titl hello
+	.nrel
+
+start:	lda 0,bpmsg
+	.systm
+	.wropr
+	 jmp er
+
+done:	.systm
+	.rtn
+	 jmp er
+	halt
+
+er:	.systm
+	.ertn
+	 halt
+	 halt
+
+bpmsg:	.+1*2
+	; note bytes are packed right-to-left by default
+	.txt /Hello, world./
+	
+	.end start

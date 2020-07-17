@@ -1,0 +1,579 @@
+/ MORSE CODE TRANCEIVING PROGRAM
+/ COPYRIGHT HOWARD G. CUNNINGHAM    02/18/75
+  
+/ REVISIONS:
+/       02/18   TRANSMIT
+/       02/24   BUFFERED I/O
+/       03/06   RECEIVE 
+/       03/18   RUBOUT AND ERROR CODE 
+  
+  
+/ INDEX REGISTER ASSIGNMENTS
+  
+*10 
+TQPT,   TQBF+20 /TRANS BUF PTR
+PQPT,   PQBF-1  /PRINT BUF PTR
+I1,     0       /SCRATCH
+  
+/ GLOBAL DATA 
+  
+*20 
+MQ,     KEY     /LOCATION DISPLAYED IN MQ 
+KEY,    0       /KEY STATE, 0:UP, 1:DOWN
+TONE,   0       /RECEIVER TONE, 0:OFF, 1:ON 
+BUZZ,   0       /SOFTWARE SIDETONE BUZZER 
+SPEED,  40      /DIT TIME IN CLOCK TICKS
+MODPRT, +1      /PRINT MODE, -1:IN, 0:NO, +1:OUT
+MODOPR, -1      /OPERATION MODE, 0:DUPLEX, 1:XCVE,
+                /2:LOCKED, +:RECEIVE, -:TRANSMIT
+T1,     0       /SCRATCH
+T2,     0 
+FIX=100         /PATCH AREA 
+  
+/ MAIN PROCESSING LOOP
+  
+*200
+MORSE,  TLS 
+        KCC 
+MOR1,   CLA 
+        TAD     (-512)
+        DCA     TIME
+        JMS     SRVSKB
+        JMS I   (CODE)
+        JMS I   (COPY)
+        JMS I   (SRVSTP)
+        JMS I   (BLINK) 
+        ISZ     TIME
+        JMP     .-1 
+        JMP     MOR1
+  
+TIME,   0       /SOFTWARE CLOCK 
+  
+/ SERVICE KEYBOARD
+/ PROCESS CONTROL FUNCTIONS 
+/ QUEUE PRINTING CHARACTERS 
+  
+SRVSKB, 0 
+        KSF             /SENSE CHARACTER AVAILABLE
+        JMP I   SRVSKB
+        KRB 
+        AND     [177] 
+        DCA     T1
+        TAD     T1
+        AND     [140] 
+        SNA CLA 
+        JMP     SKB1    /IF CTRL CHAR 
+        TAD     T1
+        TAD     (-177)
+        SNA CLA 
+        JMP     SKB2    /IF RUBOUT KEY
+        TAD     MODPRT  /CHECK ECHO MODE
+        SPA CLA 
+        JMS I   (PRTCHR)/IF ECHOING INPUT 
+/ QUEUE CHARACTER IN TRANS BUFFER 
+        TAD     TQPT
+        TAD     (-TQBF-TQBFL+1) 
+        SNA CLA 
+        JMP I   SRVSKB  /IF BUFF FULL 
+        TAD     T1
+        RAR             /TRANSLATE LOWER TO UPPER CASE
+        AND     T1
+        AND     [40]
+        CMA 
+        AND     T1
+        DCA I   TQPT    /STORE CHARACTER
+        JMP I   SRVSKB
+/ CONTROL FUNCTION PROCESSING 
+SKB1,   TAD     T1
+        TAD     (SKBA)  /COMPUTE TABLE ADDR 
+        DCA     T2
+        TAD I   T2
+        SNA 
+        JMP I   SRVSKB  /IF UNDEFINED CTRL CODE 
+        DCA     T2
+        JMP I   T2      /DISPATCH TO PROCESSOR
+/ RUBOUT WORD OR SEND ERROR CODE
+SKB2,   TAD     TQPT
+        TAD     (-TQBF+1) 
+        SNA CLA 
+        JMP     SKB3    /IF BUFFER EMPTY
+        CLA CLL CMA RAL 
+        TAD     TQPT
+        DCA     TQPT    /BACK UP POINTER
+        TAD I   TQPT
+        TAD     [-40] 
+        SZA CLA 
+        JMP     SKB2    /IF NOT AT BLANK
+        JMP I   SRVSKB
+SKB3,   TAD     (37)    /TRANSMIT ERROR CODE
+        DCA I   TQPT
+        TAD     [40]
+        DCA I   TQPT
+        JMP I   SRVSKB
+  
+/ CONTROL FUNCTION PROCESSORS 
+/ ENTERED VIA JMP WITH AC=0, T1=CHAR
+  
+/ ^F SEND FASTER
+CTLF,   TAD     SPEED   /SUB SPEED/4
+        CLL RAR 
+        CLL CML CMA IAC RAR 
+CTLF1,  TAD     SPEED 
+        SMA 
+        DCA     SPEED   /IF WITHIN RANGE, UPDATE
+        JMP I   SRVSKB
+/ ^S SEND SLOWER
+CTLS,   TAD     SPEED   /ADD (SPEED+3)/4
+        CLL IAC RAR 
+        CLL IAC RAR 
+        JMP     CTLF1 
+/ ^E CLEAR TRANSMIT BUFFER
+CTLE,   TAD     [TQBF-1]
+        DCA     TQPT
+        JMP I   SRVSKB
+/ ^I, ^O, ^N OUTPUT MODE CONTROL
+CTLI,   CLA CLL CMA RAL 
+CTLO,   IAC 
+CTLN,   DCA     MODPRT
+        JMP I   SRVSKB
+/ ^T, ^R, ^D OPERATION MODE CONTROL 
+CTLT,   CLL CMA RAL 
+CTLR,   CLL IAC RAL 
+CTLD,   DCA     MODOPR
+        JMP I   SRVSKB
+/ ^X TRANSCEIVE OPERATION MODE
+CTLX,   TAD     MODOPR
+        RAL 
+        CLA IAC 
+        SZL 
+        CMA IAC 
+        JMP     CTLD
+/ ^M LOCAL CR-LF
+CTLM,   JMS I   (PRTCHR)
+        TAD     [12]
+        JMS I   (PRTCHR)
+        JMP I   SRVSKB
+*400
+  
+/ MORSE CODE GENERATOR
+/ ENTERED EVERY CLOCK TIC 
+/ RETURNS WITH KEY = KEY STATE
+  
+CODE,   0 
+        ISZ     DELAY 
+        JMP I   CODE    /IF DIT TIME NOT UP YET 
+        CLA CLL 
+        TAD     SPEED 
+        CMA IAC 
+        DCA     DELAY   /SET DIT TIME 
+        ISZ     KEYUP 
+        JMP     COD3+1  /IF KEY GOING UP
+        CLA CLL CMA RAL 
+        DCA     KEYUP 
+        TAD     CHAR    /CHAR IN PROGRESS 
+        CLL RAL 
+        SZA 
+        JMP     COD2    /IF MORE TO CURRENT CHAR
+        DCA     CHAR
+        SZL 
+        JMP     COD4    /IF STOP BIT ONLY, LETTER SPACE 
+/ GET NEXT LETTER 
+COD1,   TAD     MODOPR  /CHECK MODE 
+        SPA SNA 
+        JMS     NXTCHR
+        JMP     COD5    /IF RECEIVING OR NOTHING TO SEND
+        AND     [77]
+        TAD     (TABLE) /COMPUTE TABLE ADDRESS
+        DCA     T1
+        TAD     T1
+        TAD     (-TABLE-40) 
+        SNA CLA 
+        JMP I   CODE    /IF SPACE ENTERED 
+        TAD I   T1
+        SNA 
+        JMP     COD1    /IF UNDEFINED CHARACTER 
+        CLL RAL 
+/ ADJUST DELAY IF DAH NEXT
+COD2,   DCA     CHAR
+        SNL 
+        JMP     COD3    /IF DIT NEXT
+        TAD     DELAY 
+        CLL RAL 
+        TAD     DELAY 
+        DCA     DELAY   /DELAY 3 DIT TIMES
+COD3,   CLA IAC 
+        DCA     KEY 
+        JMP I   CODE
+/ SEND WORD SPACE 
+COD4,   TAD     (-4)    /KEY UP FOR TOTAL OF 7
+        DCA     KEYUP 
+        JMP I   CODE
+/ CHECK FOR OP MODE CHANGE
+COD5,   CLA CMA 
+        DCA     DELAY   /COME BACK QUICKLY
+        ISZ     KEYUP 
+        TAD     TQPT
+        TAD     (-TQBF+1) 
+        SZA 
+        JMP I   CODE    /IF SOMETHING LEFT IN BUFFER
+        TAD     MODOPR
+        IAC 
+        SZA 
+        JMP I   CODE    /IF OTHER THAN XCVE (RECEIVING) 
+        IAC 
+        DCA     MODOPR
+        JMP I   CODE
+  
+KEYUP,  -1
+CHAR,   4000    /BIT PATTERN OF CURRENT CHAR
+DELAY,  -1
+  
+/ GET NEXT CHAR FROM TRANSMIT BUFFER
+/ ECHOS CHARACTER IF REQUIRED 
+/ CALL  JMS     NXTCHR
+/       JMP     NOCHAR
+/ USES  I1, T1
+/ CALLS PRTOUT
+  
+NXTCHR, 0 
+        CLA CMA 
+        TAD     (TQBF)
+        DCA     I1      /SET START ADDR FOR SEARCH
+        TAD     TQPT
+        CMA IAC 
+        TAD     I1      /COMPUTE WORD COUNT 
+        SNA 
+        JMP I   NXTCHR  /IF BUFFER EMPTY
+        DCA     T1
+/ SEARCH FOR SPACE CODE 
+NXT1,   TAD I   I1
+        TAD     [-40]   /CHECK FOR SPACE
+        SNA CLA 
+        JMP     NXT2    /IF FOUND A SPACE 
+        ISZ     T1
+        JMP     NXT1    /LOOP FOR ALL OF BUFFER 
+        JMP I   NXTCHR  /IF NO WORD SPACE IN BUFFER 
+/ REMOVE CHAR FROM BUFFER AND PRINT 
+NXT2,   TAD I   (TQBF)
+        DCA     T1      /SAVE FOR LATER 
+        ISZ     NXTCHR  /ADVANCE RTN ADR
+        TAD     MODPRT
+        SMA SZA CLA 
+        JMS I   [PRTOUT]/IF PRINTING OUTPUT 
+/ MOVE BUFFER DOWN
+        TAD     (TQBF)
+        DCA     I1      /FROM POINTER 
+        TAD     TQPT
+        CMA IAC 
+        TAD     (TQBF)  /WORD COUNT -1
+        DCA     T2
+        TAD     [TQBF-1]
+        DCA     TQPT    /TO POINTER 
+        TAD     T2
+        SNA CLA 
+        JMP     NXT4    /IF NONE TO MOVE
+NXT3,   TAD I   I1      /MOVE LOOP
+        DCA I   TQPT
+        ISZ     T2
+        JMP     NXT3
+NXT4,   TAD     T1
+        JMP I   NXTCHR
+*600
+  
+/ COPY MORSE CODE 
+/ ENTRY EVERY CLOCK TIC 
+  
+COPY,   0 
+        CLA IAC 
+        TAD     COPA    /BUMP TIC COUNTER 
+        SMA 
+        DCA     COPA
+/ COMPARE CURRENT WITH PREVIOUS KEY STATE 
+        CLA 
+        TAD     TONE
+        SNA CLA 
+        JMP     COP2
+        TAD     COPB
+        SNA CLA 
+COP3,   DCA     COPA    /IF STATE CHANGED, RESET COUNTER
+        TAD     TONE
+        DCA     COPB
+        JMP I   COPY
+COP2,   TAD     MODOPR  /KEY IS UP, CHECK OP MODE 
+        SPA CLA 
+        JMP     COP9    /IF NOT RECEIVING 
+        TAD     COPB
+        SNA CLA 
+        JMP     COP4    /IF KEY HAS BEEN UP 
+/ DISTINGUISH DITS AND DAHS 
+        TAD     COPD
+        CLL CMA IAC RAL /-2*SPEED 
+        TAD     COPA
+        DCA     T1      /LINK IS 0 IF DAH 
+        TAD     COPC
+        CML RAL 
+        SZL             /SENSE ASSEMBLY OVERFLOW
+        CLA CMA 
+        DCA     COPC
+/ CHECK FOR ERROR CODE
+        TAD     COPC
+        AND     [77]
+        SZA CLA 
+        JMP     .+3     /IF LESS THAN 6 TRAILING DITS 
+        TAD     (400) 
+        DCA     COPC    /CHANGE TO EIGHT DITS 
+/ COMPUTE SPEED OF LAST ELEMENT 
+        TAD     COPA
+        DCA     COPD
+        TAD     T1
+        SPA CLA 
+        JMP     COP3    /IF LAST WAS DIT
+        TAD     COPA    /DIT = DAH/3 OR APROX 11/32*DAH 
+        CLL RAR 
+        TAD     COPA
+        CLL RAR 
+        CLL RAR 
+        TAD     COPA
+        CLL RAR 
+        CLL RAR 
+        SZA 
+        DCA     SPEED   /UPDATE GLOBAL SPEED BASED ON DAH 
+        TAD     SPEED 
+        DCA     COPD
+        JMP     COP3    /RESET TIC COUNT AND RETURN 
+/ MEASURE LENGTH OF PAUSE 
+COP4,   TAD     SPEED 
+        CLL CMA IAC RAL /-2*SPEED 
+        TAD     COPA
+        SNA CLA 
+        JMP     COP5    /IF LETTER SPACE
+        TAD     SPEED 
+        CLL RAL 
+        CLL RAL 
+        TAD     SPEED 
+        CMA IAC         /-6*SPEED 
+        TAD     COPA
+        SNA CLA 
+        JMP     COP8    /IF WORD SPACE
+/ CHECK FOR TRANCEIVE MODE CHANGE 
+        TAD     (-1000) 
+        TAD     COPA
+        SPA CLA 
+        JMP I   COPY    /IF STILL SENDING 
+        CLA CMA 
+        TAD     MODOPR
+        SZA CLA 
+        JMP I   COPY    /IF NOT TRANSCEIVING
+        CLA CMA 
+        DCA     MODOPR
+        JMP I   COPY
+/ TRANSLATE LETTER
+COP5,   CLL CML         /STOP BIT 
+        TAD     COPC
+        RAL             /LEFT JUSTIFY ASSEMBLY
+        SNL 
+        JMP     .-2 
+        CMA IAC 
+        DCA     COPC
+        TAD     (-100)
+        DCA     T1
+        TAD     (TABLE-1) 
+        DCA     I1
+COP6,   TAD I   I1      /SEARCH TABLE FOR LETTER
+        TAD     COPC
+        SNA CLA 
+        JMP     COP7    /IF FOUND IT
+        ISZ     T1
+        JMP     COP6
+        TAD     [100]   /IF BAD CHAR SEND ? 
+        JMP     COP8+1
+COP7,   TAD     I1      /COMPUTE ASCII FROM TABLE ADDRESS 
+        CMA 
+        AND     [40]
+        CLL RAL 
+        TAD     I1
+        AND     [177] 
+        SKP 
+COP8,   TAD     [40]    /SEND WORD SPACE
+        JMS I   [PRTOUT]/QUEUE CHARACTER
+COP9,   CLA IAC         /CLEAR ASSEMBLY 
+        DCA     COPC
+        DCA     COPB
+        JMP I   COPY
+  
+COPA,   0       /CLOCK TIC COUNTER
+COPB,   0       /PREVIOUS KEY STATE 
+COPC,   1       /CHARACTER ASSEMBLY 
+COPD,   40      /LOCAL SPEED
+*1000 
+  
+/ QUEUE CHARACTER FOR PRINTING
+/ ENTRY T1 OR AC=CHAR, EXIT AC=0
+  
+PRTCHR, 0 
+        SZA 
+        DCA     T1      /IF CHAR IN AC, SAVE IT 
+        CLA 
+        TAD     PQPT
+        TAD     (-PQBF-PQBFL+1) 
+        SNA CLA 
+        JMP I   PRTCHR  /IF BUF FULL
+        TAD     T1
+        DCA I   PQPT    /STUFF IT IN
+        JMP I   PRTCHR
+  
+/ QUEUE CHARACTER FOR PRINTING
+/ PRECEED WITH CR-LF-LF IF MODE CHANGE
+/ ENTRY (SAME AS PRTCHR)
+  
+PRTOUT, 0 
+        SNA 
+        TAD     T1
+        DCA     T2      /SAVE CHAR
+        TAD     MODOPR
+        AND     [100] 
+        TAD     PRIA
+        SNA CLA 
+        JMP     PRI1    /IF SAME MODE 
+        TAD     MODOPR
+        AND     [100] 
+        CMA IAC 
+        DCA     PRIA    /RECORD CHANGE
+        TAD     (15)
+        JMS     PRTCHR  /NEW PARAGRAPH
+        TAD     [12]
+        JMS     PRTCHR
+        JMS     PRTCHR
+PRI1,   TAD     T2
+        JMS     PRTCHR
+        JMP I   PRTOUT
+  
+PRIA,   -100    /PREVIOUS MODE, -100:TRANS, 0:RECEIVE 
+  
+/ SERVICE TELEPRINTER 
+/ OUTPUT FROM PRINT QUEUE 
+/ GENERATE LOCAL CR-LF AT MARGIN
+  
+SRVSTP, 0 
+        TSF 
+        JMP I   SRVSTP  /IF NOT READY 
+        CLA 
+        TAD     (-PQBF) 
+        TAD     PQPT
+        SPA 
+        JMP I   SRVSTP  /IF BUFFER EMPTY
+        CMA IAC 
+        DCA     T2
+/ CHECK FOR SPECIAL OUTPUT CONDITIONS 
+        TAD I   (PQBF)
+        AND     [140]   /CHECK FOR CONTROL CHAR 
+        SZA CLA 
+        ISZ     STPA    /COUNT PRINTING CHARACTERS
+        SKP 
+        JMP     STP3    /IF AT MARGIN 
+STP1,   TAD I   (PQBF)
+        TAD     (-15)   /SENSE CR 
+        SZA CLA 
+        JMP     .+3 
+        TAD     (-70) 
+        DCA     STPA    /RESET COLUMN CTR 
+        TAD I   (PQBF)
+        TAD     (200) 
+        TLS             /SEND CHAR
+/ MOVE QUEUE DOWN 
+        CLA CMA 
+        TAD     (PQBF)
+        DCA     PQPT
+        TAD     (PQBF)
+        DCA     I1
+        TAD     T2
+        SNA CLA 
+        JMP I   SRVSTP  /IF NONE TO MOVE
+STP2,   TAD I   I1
+        DCA I   PQPT
+        ISZ     T2
+        JMP     STP2
+        JMP I   SRVSTP
+/ CHECK FOR AUTO CR, LF 
+STP3,   CLA CMA 
+        DCA     STPA    /KEEP COUNTER AT MARGIN 
+        TAD I   (PQBF)
+        TAD     [-40] 
+        SZA CLA 
+        JMP     STP1    /IF NOT SPACE CODE
+        TAD     (215) 
+        TLS             /SEND CR
+        CLA 
+        TAD     [12]
+        DCA I   (PQBF)  /QUEUE LF 
+        TAD     (-70) 
+        DCA     STPA    /RESET COLUMN CTR 
+        JMP I   SRVSTP
+  
+STPA,   -1              /COLUMNS LEFT BEFORE MARGIN 
+  
+/ VISUAL DISPLAYS 
+/ SERVICE INTERPROCESSOR BUFFER 
+  
+BLINK,  0 
+        CLA 
+        6502            /READ INTERPROCESSOR BUFFER 
+        OSR 
+        AND     (1) 
+        DCA     TONE
+        TAD     TONE    /GENERATE SIDETONE
+        TAD     KEY 
+        TAD     BUZZ    /INCR BUZZER IF INPUT OR OUTPUT ON
+        DCA     BUZZ
+        TAD     BUZZ
+        CLL CML RAL     /BIT 10 IS ALWAYS ON
+        CLL RAL 
+        TAD     KEY     /BIT 11 IS KEY STATE
+        6504            /TRANSMIT TO INTERPROCESSOR BUFFER
+        CLA 
+        TAD I   MQ
+        MQL 
+        CLA CLL 
+/ TRANSMIT BUFFER THERMOMETER 
+        TAD     TQPT
+        CLL CMA 
+        TAD     [TQBF-1]
+        DCA     T1
+        RAR 
+        CLL CML 
+        ISZ     T1
+        JMP     .-3 
+        JMP I   BLINK 
+*1200 
+  
+/ ASCII TO/FROM MORSE TRANSLATIONS, 0:UNDEFINDED
+/ MUST START AT MULTIPLE OF 100 
+  
+        DECIMAL 
+TABLE,  0;1536;2176;2688;2304;1024;640;3328 
+        128;512;1920;2816;1152;3584;2560;3840 
+        1664;3456;1280;256;3072;768;384;1792
+        2432;2944;3200;0;0;0;0;8
+        0;1088;0;352;1344;0;0;0 
+        0;0;0;0;3296;2240;1376;2368 
+        4032;1984;960;448;192;64;2112;3136;3648;3904
+        0;0;0;0;0;800 
+        OCTAL 
+  
+/ PROCESSOR ADDRESS TABLE, 0:UNDEFINED
+  
+SKBA,   0;0;0;0;CTLD;CTLE;CTLF;0
+        0;CTLI;0;0;0;CTLM;CTLN;CTLO 
+        0;0;CTLR;CTLS;CTLT;0;0;0
+        CTLX;0;0;0;0;0;0;0
+  
+/ TRANSMIT AND PRINT BUFFERS
+/ CODE AT SKB2 REQUIRES THAT TQBF-1 NOT CONTAIN 40
+  
+PQBFL=200 
+TQBFL=1000
+TQBF,   40;115;117;122;123;105;40;102;131 
+        40;127;101;71;126;122;125;40
+PQBF=TQBF+TQBFL 
+LWAL=PQBF+PQBFL 
+$ 

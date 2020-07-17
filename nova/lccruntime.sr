@@ -1,0 +1,172 @@
+; LSH: value in AC0, number of bits (>0) in AC1
+; takes 1.6+3.3n cycles
+lsh:	sta 1,shcnt ; shift amount
+lbit:	movzl 0,0 ; left shift dst
+	dsz shcnt
+	jmp lbit
+	jmp 0,3 ; return
+; RSH: value in AC0, number of bits (>0) in AC1
+; signed shift of positive number takes 1.1+ 1.6+3.3n cycles
+; signed shift of negative number takes 1.6+ 1.6+3.3n cycles
+rshi:	movl# 0,0,szc ; get msb into carry
+	jmp rshn ; it was negative
+; entry point for unsigned shift right:
+; unsigned shift takes 1.6+3.3n cycles
+rshu:	sta 1,shcnt
+rbitp:	movzr 0,0 ; right shift dst
+	dsz shcnt
+	jmp rbitp
+	jmp 0,3 ; return
+rshn:	sta 1,shcnt
+rbitn:	movor 0,0 ; right shift dst, setting msb
+	dsz shcnt
+	jmp rbitn
+	jmp 0,3 ; return
+shcnt:	0
+				
+; from Programmer's Reference:
+
+; 14. Perform the inclusive OR of the operands in AC0 and AC1.
+; The result is placed in AC1. The carry bit is unchanged.
+bor:	com 0,0
+	and 0,1
+	adc 0,1
+	jmp 0,3 ; return
+
+; 15. Perform the exclusive OR of the operands in AC0 and AC1.
+; The result is placed in AC1. The contents of AC2 and the carry bit
+; are destroyed.
+bxor:	mov 1,2
+	andzl 0,2
+	add 0,1
+	sub 2,1
+	jmp 0,3 ; return
+
+
+
+;----------
+	.nrel
+start:
+	lda 1,c1
+	lda 2,c2
+	jsr divu
+	sta 0,temp
+	jsr pbin ; print quo
+	lda 1,temp
+	jsr pbin ; print rem
+
+	.systm
+	.rtn
+err:	.systm
+	.ertn
+temp: 	0
+	.rdx 10
+c1:	4234
+c2:	88
+	.rdx 8
+
+;---------
+mpy:	; 16-bit multiply
+	; AC0 <- AC1 * AC2
+	; clobbers AC1
+	sub 0,0		; clear result
+mbit:	movzr 1,1,szc	; shift multiplier, test lsb
+	add 2,0		; 1: add multiplicand
+	movzl 2,2,szr	; shift and test for zero
+	jmp mbit	; not zero, do another bit
+	jmp 0,3		; return
+;---------
+; more info:
+; http://groups.google.com/groups?threadm=davidlmCpyC0r.6qx%40netcom.com
+; also see http://www.cs.uiowa.edu/~jones/bcd/divide.html
+; for comprehensive discussion of optimising division by small constants
+; using reciprocal multiplication method.
+divu:	; 16 bit unsigned divide
+	sta 3,.cc03	; save return
+	sub 0,0		; integer divide clear high part
+	lda 3,.cc20	; get step count
+	movzl 1,1	; shift dividend low part [carry gets msb]
+divu1:	movl 0,0	; shift dividend high part
+	subz# 2,0,szc	; does divisor go in? [AC2<=AC0]
+	sub 2,0		; yes [complements carry, therefore always sets]
+	movl 1,1	; shift dividend low part [carry gets msb]
+	inc 3,3,szr	; count step
+	jmp divu1	; iterate loop
+	jmp @ .cc03	; return
+;---------
+; 20. Simulate the operation of the DIVIDE instruction.
+; [ AC1 <- AC0,1 / AC2 ; AC0 <- rem ; carry indicates overflow ]
+	; AC0 = hi word of dividend in, remainder out
+	; AC1 = lo word of dividend in, quotient out
+	; AC2 = divisor
+.divi:	sub 0,0		; clear hi word of dividend
+.divu:	sta 3,.cc03	; save return address
+	subz# 2,0,szc	; test for overflow
+	jmp .cc99	; yes, exit (AC0>AC2)
+	lda 3,.cc20	; get step count
+	movzl 1,1	; shift lo word of dividend [carry gets msb]
+.cc98:	movl 0,0	; shift [carry into] hi word of dividend
+	sub# 2,0,szc	; does divisor go in? [AC2<=AC0]
+	;[carry set]
+	sub 2,0		; yes [complements carry?]
+	;[at this point, carry is always clear]
+	movl 1,1	; shift dividend low part [carry gets msb]
+	inc 3,3,szr	; count step
+	jmp .cc98	; iterate loop
+	subo 3,3,skp	; done, clear carry
+.cc99:	subz 3,3	; set carry
+	jmp @ .cc03	; return
+.cc03:	0
+.cc20:	-20		; sixteen steps
+;---------
+pbin:	; print AC1 on console as 16 binary digits, by Toby Thain
+	; clobbers all accumulators
+	sta 3,retrn	; save return addr
+	lda 2,n16	; set up bit counter
+pbit:	lda 0,chr0	; load ASCII '0'
+	movzl 1,1,szc	; get next bit in carry
+	inc 0,0		; bump to "1"
+	.systm
+	.pchar 		; AC0-2 preserved
+	jmp err ; if error
+	inc 2,2,szr	; bump counter
+	jmp pbit	; loop again if not zero
+pspc:	lda 0,spc	; output a space
+	.systm
+	.pchar
+	jmp err ; if error
+	jmp @ retrn
+
+pdec:	; print AC1 on console as 5 decimal digits
+	sta 3,retrn
+	lda 2,c10	; load divisor
+	lda 3,n5	; loop counter
+	; push each digit from last to first
+dig:	sub 0,0		; clear high word of dividend
+	div
+	psha 0		; push remainder, this is next digit
+			; quotient is in AC1
+	inc 3,3,szr	; bump counter
+	jmp dig		; keep going if not zero
+	; the digits are on the stack
+	; pop them off (first to last) and print them
+	lda 2,n5	; loop counter
+	lda 1,chr0	; ASCII '0'
+pdig:	popa 0
+	add 1,0
+	.systm
+	.pchar
+	jmp err ; if error
+	inc 2,2,szr	; bump counter
+	jmp pdig	; loop for next digit if not zero
+	jmp pspc	; done. print space and return
+	
+spc:	" ;that's a space
+chr0:	"0
+n16: 	-20 ; = negative sixteen
+n5:	-5
+c10:	12 ; = ten
+digs:	0
+retrn:	0
+	.end start
+

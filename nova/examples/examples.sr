@@ -1,0 +1,173 @@
+AC=0
+ACS=1
+ACD=2
+ACX=3
+ACY=2
+
+	.NREL
+	
+;1. Clear an AC and the carry bit
+	SUBO	AC,AC
+
+;2. Clear an AC and preserve the carry bit
+	SUBC	AC,AC
+
+;3. Generate the indicated constants
+	SUBZL	AC,AC	;GENERATE +1
+	ADC	AC,AC	;GENERATE -1
+	ADCZL	AC,AC	;GENERATE -2
+
+;4. Let ACX be any accumulator whose contents are zero.
+;   Generate the indicated constants in ACX.
+	INCZL	ACX,ACX	;GENERATE +2
+	INCOL	ACX,ACX	;GENERATE +3
+	INCS	ACX,ACX	;GENERATE +400(8)
+
+;5. Subtract 1 from an accumulator without using a constant from memory
+	NEG	AC,AC
+	COM	AC,AC
+
+;6. Check if both bytes in an accumulator are equal
+	MOVS 	ACS,ACD
+	SUB 	ACS,ACD,SZR
+	JMP 	.NEQ	;NOT EQUAL
+	; EQUAL
+.NEQ:	NOP
+
+;7. Check if two accumulators are both zero.
+	MOV 	ACS,ACS,SNR
+	SUB#	ACS,ACD,SZR
+	JMP	.BOTH0	;NOT BOTH ZERO
+	; BOTH ZERO
+.BOTH0:	NOP
+
+;8. Check an ASCII character to make sure it is a decimal digit.
+;   The character is in ACS and is not destroyed by the test.
+;   Accumulators ACX and ACY are destroyed.
+	LDA	ACX,C60	;ACX=ASCII ZERO
+	LDA	ACY,C71	;ACY=ASCII NINE
+	ADCZ#	ACY,ACS,SNC	;SKIPS IF (ACS)>9
+	ADCZ#	ACS,ACX,SZC	;SKIPS IF (ACS)>=0
+	JMP	.NOTDIG	;NOT DIGIT
+	; DIGIT
+.NOTDIG:	NOP
+C60:	60
+C71:	71
+
+;9. Test an accumulator for zero.
+	MOV	AC,AC,SZR	
+	JMP	.NOT0	;NOT ZERO
+	;ZERO
+.NOT0:	NOP
+
+;10. Test an accumulator for -1.
+	COM#	AC,AC,SZR
+	JMP	.NOTM1	;NOT -1
+	;-1
+.NOTM1:	NOP
+
+;11. Test an accumulator for 2 or greater.
+	MOVZR#	AC,AC,SNR
+	JMP	.LT2	;LESS THAN 2
+	;2 OR GREATER
+.LT2:	NOP
+
+;12. Assume it is known that AC contains 0, 1, 2, or 3. Find out which one.
+	MOVZR#	AC,AC,SEZ
+	JMP	THREE	;WAS 3
+	MOV	AC,AC,SNR	
+	JMP	ZERO	;WAS 0
+	MOVZR#	AC,AC,SZR
+	JMP	TWO	;WAS 2
+	NOP	;WAS 1
+THREE: 0
+ZERO: 0
+TWO: 0
+
+;13. Multiply an AC by the indicated value.
+	MOV ACX,ACX	;MULTIPLY BY 1
+	
+	MOVZL	ACX,ACX	;2
+	
+	MOVZL	ACX,ACY	;3
+	ADD	ACY,ACX
+
+	ADDZL	ACX,ACX	;4
+
+	MOV	ACX,ACY	;5
+	ADDZL	ACX,ACX
+	ADD	ACY,ACX
+
+	MOVZL	ACX,ACY	;6
+	ADDZL	ACY,ACX
+
+	MOVZL	ACX,ACY	;7
+	ADDZL	ACY,ACY	
+	SUB	ACX,ACY	;IN ACY
+
+	ADDZL	ACX,ACX	;8
+	MOVZL	ACX,ACX
+	
+	MOVZL	ACX,ACY	;9
+	ADDZL	ACY,ACY
+	ADD	ACY,ACX
+
+	MOV	ACX,ACY	;10
+	ADDZL	ACX,ACX
+	ADDZL	ACY,ACX
+
+	MOVZL	ACX,ACY	;12
+	ADDZL	ACY,ACX	
+	MOVZL	ACX,ACX
+
+	MOVZL	ACX,ACY	;18
+	ADDZL	ACY,ACY
+	ADDZL	ACY,ACX
+
+	.END
+
+; 19. Simulate the operation of the MULTIPLY instruction.
+.mpyu:	subc 0,0	; clear AC0, don't disturb carry
+.mpya:	sta 3,.cb03	; save return
+	lda 3,.cb20	; get step count
+.cb99:	movr 1,1,snc	; check next multiplier bit
+	movr 0,0,skp	; 0 shift
+	addzr 2,0	; 1 - add multiplicand and shift
+	inc 3,3,szr	; count step, complementing carry on final count
+	jmp .cb99	; iterate loop
+	movcr 1,1	; shift in last low bit (which was complemented 
+			; by final count) and restore carry
+	jmp @ .cb03
+.cb03:	0
+.cb20:	-20		; sixteen steps
+
+; [ a much shorter multiply routine, by Toby Thain ]
+mpy:	; multiply AC0 <- AC1 * AC2
+	; clobbers AC1
+	sub 0,0		; 0: clear result
+mbit:	movzr 1,1,szc	; shift multiplier, test lsb
+	add 2,0		; 1: add multiplicand
+	movzl 2,2,szr	; shift and test for zero
+	jmp mbit	; not zero, do another bit
+	jmp 0,3		; return
+
+; 20. Simulate the operation of the DIVIDE instruction.
+; [ AC1 <- AC0,1 / AC2 ]
+.divi:	sub 0,0		; integer divide clear high part
+.divu:	sta 3,.cc03	; save return
+	subz# 2,0,szc	; test for overflow
+	jmp .cc99	; yes, exit (AC0>AC2)
+	lda 3,.cc20	; get step count
+	movzl 1,1	; shift dividend low part
+.cc98:	movl 0,0	; shift dividend high part
+	sub# 2,0,szc	; does divisor go in?
+	sub 2,0		; yes
+	movl 1,1	; shift dividend low part
+	inc 3,3,szr	; count step
+	jmp .cc98	; iterate loop
+	subo 3,3,skp	; done, clear carry
+.cc99:	subz 3,3	; set carry
+	jmp @ .cc03	; return
+.cc03:	0
+.cc20:	-20		; sixteen steps
+

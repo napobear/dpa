@@ -1,0 +1,12 @@
+// examples from PAL III manual, page 3-8
+A=333
+*222
+B, CLA
+A+B
+A-B
+A B
+-A
+1-B
+B-1
+-71
+

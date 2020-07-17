@@ -1,0 +1,39 @@
+/ adapted from example in Digital PDP-8 Handbook Series, Introduction to Programming, p5-12
+*200
+hello,	cla cll
+		tls			/ tls to set printer flag.
+		tad charac	/ set up index register
+		dca ir1		/ for getting characters.
+		tad m6		/ set up counter for
+		dca count	/ typing characters.
+next,	tad i ir1	/ get a character.
+		jms type	/ type it.
+		isz count	/ done yet?
+		jmp next	/ no: type another.
+		hlt
+
+type,	0			/ type subroutine
+		tsf
+		jmp .-1
+		tls
+		cla
+		jmp i type
+charac,	.			/ used as initial value of ir1
+		310 / H
+		305 / E
+		314 / L
+		314 / L
+		317 / O
+		254 / ,
+		240 /
+		327 / W
+		317 / O
+		322 / R
+		314 / L
+		304 / D
+		241 / !
+m6,		-15
+count,	0
+ir1 = 10
+$
+

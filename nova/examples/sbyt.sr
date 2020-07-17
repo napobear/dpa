@@ -1,0 +1,23 @@
+; 22. Store a byte in memory. The routine is called via a JSR.
+; The byte to be stored is in the right half of AC0 
+; with the left half of AC0 set to 0. The byte pointer is in AC2.
+; The word written is returned in AC0. AC1, AC2 and the carry bit
+; are unchanged. AC3 is destroyed.
+sbyt:	sta 3,sret		; save return
+	sta 1,sac1		; save AC1
+	lda 3,mask
+	movr 2,2,snc	; convert byte pointer to word address
+					; and skip if byte is to be right half
+	movs 0,0,skp	; swap byte and leave mask alone
+	movs 3,3		; swap mask
+	lda 1,0,2		; load word that is to receive byte
+	and 3,1			; mask off byte that is to receive new byte
+	add 1,0			; add memory word on top of new byte
+	sta 0,0,2		; store word with new byte
+	movl 2,2		; restore byte pointer and carry
+	lda 1,sac1		; restore AC1
+	jmp @sret		; return
+sret:	0				; return location
+sac1:	0
+mask:	377
+

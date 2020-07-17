@@ -1,0 +1,15 @@
+// example from Intro to Programming, page 3-7
+// "Symbolic Addresses"
+*200
+START,	CLA CLL
+	TAD A
+	CIA
+	DCA TALLY
+MULT,	TAD B
+	ISZ TALLY
+	JMP MULT
+	HLT
+A,	0022
+B,	0044
+TALLY,	0000
+$

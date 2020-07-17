@@ -1,0 +1,35 @@
+	.titl hello
+	; a "hello, world" program for Nova running RDOS
+	; using PCHAR system call
+	.nrel
+	.ent start
+
+start:	
+dochar:	lda 0,@pmsg	; load ac0 with next word (2 chars)
+	mov# 0,0,snr	; test ac0
+	 jmp done ; skipped if nonzero
+	.systm
+	.pchar		; print first
+	 jmp er	; skipped if OK
+	movs 0,0	; swap bytes
+	.systm
+	.pchar		; print second
+	 jmp er	; skipped if OK
+	isz pmsg	; point to next word
+	jmp dochar	; go around again
+
+done:	.systm		; normal exit
+	.rtn
+	 jmp er
+	halt
+er:	.systm		; error exit
+	.ertn
+	 halt
+	halt
+
+pmsg:	.+1	; address of first word of text
+	; note bytes are packed right-to-left by default
+	.txt /Hello, world!<15><12>/ ; that's CR LF
+	0 ; flag word to end string
+	
+	.end start

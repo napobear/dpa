@@ -1,0 +1,69 @@
+    This file is part of The Didactic PDP-8 Assembler
+    Copyright (C) 2002-5 Toby Thain, toby@telegraphics.com.au
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by  
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License  
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+README
+------
+
+This program is intended to be a basic example of an assembler for a simple
+architecture, written with the aid of flex and bison. Being small, the
+assembler may lend itself to learning, extension and modification by
+interested parties. While I do not own a PDP-8 (more's the pity), this
+architecture was chosen partly for its similarity to another DeCastro design,
+the DG Nova 3. The project was mainly inspired by my friend Emil Sarlija 
+( http://www.chookfest.net/ ) who owns two Nova 3 computers and needed an assembler.
+
+PDP-8
+
+The PDP-8 assembler ("p8a") input syntax is compatible with the assembler 
+described in the "PAL III Symbolic Assembler PDP-8 Programming Manual,"
+Digital Equipment Corporation publication DEC-08-ASAC-D
+(see http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=31 
+or http://highgate.comm.sfu.ca/~djg/htdocs/cgi-bin/tifftopdf.cgi/dec-08-asac-d.pdf?loc=newstuff
+or http://www.pdp8.net/pdp8cgi/query_docs/tifftopdf.pl/pdp8docs/dec-08-asac-d.pdf )
+
+Binary object output is in RIM or BIN format. Some of the output routines
+are based on parts of Douglas Jones' PDP-8 assembler
+( ftp://ftp.cs.uiowa.edu/pub/jones/pdp8/pal.c.Z ).
+
+The "verbose" mode (-v) includes a disassembler with a "diagrammatic" output
+format designed to show each instruction's physical layout (in particular
+the microcoded instructions).
+
+DG NOVA
+
+An assembler for DG Nova architecture is also included. This follows the
+User's Manual (Programmer's Reference) for the DG Nova range of computers.
+The instruction set, addressing modes and syntax are complete, but
+the Nova native object file format (RB) is only partially implemented.
+(An RB format file dump utility, dumprb, is included in the Nova directory.)
+
+Nova bootstrap format is also supported with the -b flag;
+this is program of up to 191 words assembled at an absolute origin of 0100
+(see Nova Programmer's Reference, page VI-7, for more details).
+
+Notes on building
+
+This program has been built and tested under NetBSD 1.5/SPARC, 
+Linux/Alpha (Debian 2.2), OS X 10.2,3,4 (PowerPC G4), NEXTSTEP 3.3/HPPA.
+
+1. GNU make is required 
+2. flex ( http://www.gnu.org/directory/flex.html ) is required, 
+as the lexical analysers use features not available in traditional UNIX lex.
+
+Please contact the author with any bug reports, suggestions or comments. 
+The latest version is always available from the Subversion repository at
+http://www.telegraphics.com.au/svn/dpa/trunk/

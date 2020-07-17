@@ -1,0 +1,12 @@
+// example 3 from PAL III manual, chapter 2
+*100
+A,	TAD B
+	IAC
+	DCA B
+	TAD B
+	SPA CLA
+	JMP A
+	HLT
+*170
+B,	0
+$
