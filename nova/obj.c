@@ -23,13 +23,13 @@
 #define MAX_BOOTSTRAP 192  /* bootstrap program size limit (words);
                               see Nova Prog. Ref., page VI-7 */
 
-extern int wordmask,listing,bootprog; // full word bit mask for target architecture
-int words,cksum,rimflag = 0,leader = 0,bootwords;
+extern int wordmask,listing,bootprog,words; // full word bit mask for target architecture
+int cksum,rimflag = 0,leader = 0,bootwords;
 
 /* there is one location counter for each of the three
    relocation modes: Absolute (curloc), Normal Relocatable (nrel_loc)
    and Zero Page Relocatable (zrel_loc) */
-int relmode, /* relocation mode currently in effect */
+int relmode = NORMAL_REL, /* relocation mode currently in effect */
 	curloc = 0,nrel_loc = 0,zrel_loc = 0;
 
 extern FILE *listfile;
