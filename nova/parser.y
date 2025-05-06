@@ -21,6 +21,8 @@
 #include "asm.h"
 #include "nova.h"
 
+extern int yylex(void);
+
 #ifndef TOK_TWOAC
   #include "parser.tab.h"
 #endif
