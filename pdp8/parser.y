@@ -22,6 +22,8 @@
 #include "asm.h"
 #include "pdp8.h"
 
+extern int yylex(void);
+
 #ifndef TOK_SYM
   #include "parser.tab.h"
 #endif

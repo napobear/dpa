@@ -21,12 +21,14 @@
 #include "asm.h"
 #include "nova.h"
 
+extern int yylex(void);
+
 #ifndef TOK_TWOAC
   #include "parser.tab.h"
 #endif
 
-extern int endflag,curloc,nrel_loc,zrel_loc,bootprog,indirect;
-int radix,saveradix,saveinexpr,indexseen,seenterm,relmode = NORMAL_REL,
+extern int endflag,curloc,nrel_loc,zrel_loc,bootprog,indirect,relmode;
+int radix,saveradix,saveinexpr,indexseen,seenterm,
     condtop = 0,cond = 1,condstack[MAXCONDDEPTH],txtm=0,txtn=0;
 struct sym_rec *symlist[MAXSYMLIST];
 int nsyms = 0;

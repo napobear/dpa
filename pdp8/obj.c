@@ -25,8 +25,8 @@
    (used with permission)
 */
 
-extern int wordmask,listing; // full word bit mask for target architecture
-int curloc,words,cksum,rimflag = 0,leader = 0;
+extern int wordmask,listing,words; // full word bit mask for target architecture
+int curloc,cksum,rimflag = 0,leader = 0;
 extern FILE *listfile;
 
 char *objsuffix = ".bin";
