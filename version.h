@@ -1,9 +1,9 @@
 /*
     This file is part of The Didactic PDP-8 Assembler
-    Copyright (C) 2002-7 Toby Thain, toby@telegraphics.com.au
+    Copyright (C) 2002-7 Toby Thain, toby@telegraphics.net
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by  
+    it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
@@ -12,7 +12,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License  
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
@@ -27,7 +27,7 @@ v1.0, 4-Sep-2002
  05-Dec-2003: 1.7 - finish TXT; add -s for 'header' files; other changes
  07-Dec-2003: 1.8 - add proper relocation mode handling; basic RB file output; fix implicit EA modes
  08-Dec-2003: 1.9 - Makefile cleanups
- 10-Dec-2003: 1.91 - finally fix B operator, now lexed correctly in all cases 
+ 10-Dec-2003: 1.91 - finally fix B operator, now lexed correctly in all cases
  14-Dec-2003: 1.92 - add relocation flags to listing
  19-Dec-2003: 1.93 - implement conditional assembly
  19-Dec-2003: 1.94 - fix .RDX; check for invalid Nova 3 2AC instructions
@@ -40,5 +40,6 @@ v1.0, 4-Sep-2002
  09-May-2007: 1.991 - fix some warnings
  06-Jun-2007: 1.992 - use suffix .boot for bootstrap binary output;
                       fix simple <N> and <"C> in strings (octal/character literal)
+ 01-Feb-2026: 1.993 - fix linking and C99 errors on Linux
 */
-#define VERS_STR "1.992"
+#define VERS_STR "1.993"

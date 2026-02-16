@@ -1,9 +1,9 @@
 /*
     This file is part of The Didactic PDP-8 Assembler
-    Copyright (C) 2002 Toby Thain, toby@telegraphics.com.au
+    Copyright (C) 2002 Toby Thain, toby@telegraphics.net
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by  
+    it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
@@ -12,7 +12,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License  
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
@@ -20,13 +20,13 @@
 #include "asm.h"
 
 /* Portions from pal.c "a 2 pass PDP-8 pal-like assembler",
-   by:  Douglas Jones, Rich Coon, Bernhard Baehr 
+   by:  Douglas Jones, Rich Coon, Bernhard Baehr
    see http://www.cs.uiowa.edu/~jones/pdp8/
    (used with permission)
 */
 
 extern int wordmask,listing; // full word bit mask for target architecture
-int curloc,words,cksum,rimflag = 0,leader = 0;
+int curloc,wrds,cksum,rimflag = 0,leader = 0;
 extern FILE *listfile;
 
 char *objsuffix = ".bin";
@@ -98,7 +98,7 @@ void setorg(int loc){
 
 void assemble(int word,int m){
 	char s[200];
-	
+
 	word &= wordmask;
 	if(pass==2){
 		if(verbose){
@@ -109,5 +109,5 @@ void assemble(int word,int m){
 		listo(curloc,word,0);
 	}
 	++curloc;
-	++words;
+	++wrds;
 }
