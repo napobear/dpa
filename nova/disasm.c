@@ -1,6 +1,6 @@
 /*
     This file is part of The Didactic PDP-8 Assembler
-    Copyright (C) 2002 Toby Thain, toby@telegraphics.com.au
+    Copyright (C) 2002 Toby Thain, toby@telegraphics.net
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by  
@@ -41,7 +41,7 @@ void disasm(char *s,int word){
 			sprintf(s,"I/O: |0 1 1| %o | %s | %1s |    %02o     |",
 				f2,io_op[f3],class_f[(word>>6)&3],word&077);
 		else{ /* one accumulator - effective address */	
-			char ind[10],eastr[40],sign = ' ',
+			char ind[10],eastr[60],sign = ' ',
 				 *type[]={"pg0","rel","+AC2","+AC3"};
 			int ea,disp = word & 0377,
 				signeddisp = (disp>127 ? disp-256 : disp),

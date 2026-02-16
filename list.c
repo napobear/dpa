@@ -1,6 +1,6 @@
 /*
     This file is part of The Didactic PDP-8 Assembler
-    Copyright (C) 2002 Toby Thain, toby@telegraphics.com.au
+    Copyright (C) 2002 Toby Thain, toby@telegraphics.net
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by  
@@ -22,7 +22,7 @@
 /* lines longer than LIST_LINE will be truncated in the listing */
 #define LIST_LINE 72
 
-int lasttok = 0, listpos = 0, words = 0, noloc = 0, emitline = 0;
+int lasttok = 0, listpos = 0, noloc = 0, emitline = 0;
 char listline[LIST_LINE+1];
 FILE *listfile = NULL;
 

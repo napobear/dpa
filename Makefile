@@ -1,5 +1,5 @@
 #    This file is part of The Didactic PDP-8 Assembler
-#    Copyright (C) 2002 Toby Thain, toby@telegraphics.com.au
+#    Copyright (C) 2002 Toby Thain, toby@telegraphics.net
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by  

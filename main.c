@@ -1,9 +1,9 @@
 /*
     This file is part of The Didactic PDP-8 Assembler
-    Copyright (C) 2002 Toby Thain, toby@telegraphics.com.au
+    Copyright (C) 2002 Toby Thain, toby@telegraphics.net
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by  
+    it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
@@ -12,7 +12,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License  
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
@@ -25,7 +25,7 @@ extern FILE *listfile;
 
 extern void yyrestart(FILE*);
 
-int debug = 0,pass,interactive = 0,verbose = 0,listing = 0,bootprog = 0;
+int debug = 0,pass,interactive = 0,verbose = 0,listing = 0,bootprog = 0, words;
 char *default_out = "dpa.out",*inputfile;
 int symfile[20],symflag, /* default flags for new symbols */
 	endflag; /* parser sets this if symbol table needs to be reset */
@@ -38,7 +38,7 @@ void makepass(int p,FILE *fp){
 	pageno = 1;
 	newline();
 	yyrestart(fp);
-	endflag = 0; 
+	endflag = 0;
 
 	yyparse();
 
@@ -82,9 +82,9 @@ int main(int argc,char *argv[]){
 	for(i=1;i<argc;i++)
 		if(*argv[i] == '-'){
 			switch((argv[i])[1]){
-			case 's': 
+			case 's':
 				if(++i == argc) printf("-s must be followed by an input file name");
-				else symfile[i] = 1; 
+				else symfile[i] = 1;
 				break;
 			case 'd': debug = 1; break;
 			case 'r': rimflag = 1; objsuffix = ".rim"; break;
